@@ -1,0 +1,22 @@
+services:
+  api:
+    restart: always
+    build: .
+    env_file:
+      - .nest.env
+    depends_on:
+      - db
+    ports:
+      - '3000:3000'
+
+  db:
+    container_name: db
+    image: postgres
+    ports:
+      - '5432:5432'
+    expose:
+      - '5432'
+    env_file:
+      - .db.env
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
