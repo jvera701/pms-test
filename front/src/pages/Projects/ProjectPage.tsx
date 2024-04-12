@@ -12,19 +12,43 @@ import {
   DialogContent,
   TextField,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { UserAtom } from "../../store/userAtom";
+import { getProjects, addProject } from "../../api/api";
+import { useAtom } from "jotai";
+import { useNavigate } from "react-router-dom";
 
-const listProjects = [
-  "first",
-  "second",
-  "first",
-  "second",
-  "first",
-  "second",
-  "first",
-];
+type Project = {
+  id: number;
+  name: string;
+};
+
 function ProjectPage() {
+  const [listProjects, setListProjects] = useState<Project[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useAtom(UserAtom);
+  const navigate = useNavigate();
+
+  const getAllProjects = async () => {
+    const newProjects = await getProjects(user.token);
+    setListProjects(newProjects);
+  };
+
+  const logout = () => {
+    setUser({
+      token: "",
+    });
+    navigate("/");
+  };
+
+  useEffect(
+    () => {
+      getAllProjects();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <Container maxWidth="xl">
       <Dialog
@@ -32,12 +56,13 @@ function ProjectPage() {
         onClose={() => setIsOpen(false)}
         PaperProps={{
           component: "form",
-          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+          onSubmit: async (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             const formData = new FormData(event.currentTarget);
             const formJson = Object.fromEntries((formData as any).entries());
             const project = formJson.project;
-            console.log(project);
+            const addProjects = await addProject(user.token, project);
+            setListProjects((prevList) => [...prevList, addProjects]);
             setIsOpen(false);
           },
         }}
@@ -64,17 +89,17 @@ function ProjectPage() {
       </Typography>
 
       <Grid direction="row" container spacing={3}>
-        // TODO: add id
         {listProjects.map((project) => (
-          <Grid item xs={4}>
+          <Grid item xs={4} key={project.id}>
             <Card variant="outlined">
               <CardActionArea>
-                <CardContent>{project}</CardContent>
+                <CardContent>{project.name}</CardContent>
               </CardActionArea>
             </Card>
           </Grid>
         ))}
       </Grid>
+
       <Button
         variant="contained"
         color="primary"
@@ -83,6 +108,15 @@ function ProjectPage() {
         onClick={() => setIsOpen((prev) => !prev)}
       >
         Add new Project
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        size="large"
+        style={{ marginTop: 20, marginLeft: 20 }}
+        onClick={logout}
+      >
+        Logout
       </Button>
     </Container>
   );
