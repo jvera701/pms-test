@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ProjectsModule } from './projects/projects.module';
+import { CardsModule } from './cards/cards.module';
+import { StatusModule } from './status/status.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { ProjectsModule } from './projects/projects.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    CardsModule,
+    StatusModule,
   ],
   controllers: [AppController],
   providers: [AppService],
