@@ -6,9 +6,30 @@ const API = axios.create({
   timeoutErrorMessage: "Timeout error",
 });
 
+type Token = {
+  access_token: string;
+};
+
+type Project = {
+  id: number;
+  name: string;
+};
+
+type Status = {
+  id: number;
+  name: string;
+};
+
+type Card = {
+  id: number;
+  title: string;
+  description: string;
+  status: Status | null;
+};
+
 const login = async (email: string, password: string) => {
   try {
-    const response = await API.post("/auth/login", {
+    const response = await API.post<Token>("/auth/login", {
       email: email,
       password: password,
     });
@@ -22,7 +43,7 @@ const login = async (email: string, password: string) => {
 
 const signUp = async (email: string, password: string) => {
   try {
-    const response = await API.post("/auth/signup", {
+    const response = await API.post<Token>("/auth/signup", {
       email: email,
       password: password,
     });
@@ -36,7 +57,7 @@ const signUp = async (email: string, password: string) => {
 
 const getProjects = async (token: string) => {
   try {
-    const response = await API.get("/projects", {
+    const response = await API.get<Project[]>("/projects", {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
@@ -55,7 +76,7 @@ const addProject = async (token: string, project: string) => {
     const newProject = {
       name: project,
     };
-    const response = await API.post("/projects", newProject, config);
+    const response = await API.post<Project>("/projects", newProject, config);
     return response.data;
   } catch (e) {
     return {
@@ -64,4 +85,135 @@ const addProject = async (token: string, project: string) => {
   }
 };
 
-export { login, signUp, getProjects, addProject };
+const getAllStatuses = async (token: string, projectId: number) => {
+  try {
+    const response = await API.get<Status[]>(`/projects/${projectId}/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (e) {
+    return {
+      error: "Error",
+    };
+  }
+};
+
+const addStatus = async (token: string, projectId: number, name: string) => {
+  try {
+    const newName = {
+      name: name,
+    };
+    const response = await API.post<Status>(
+      `/projects/${projectId}/status`,
+      newName,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (e) {
+    return {
+      error: "Error",
+    };
+  }
+};
+
+const getCards = async (token: string, projectId: number) => {
+  try {
+    const response = await API.get<Card[]>(`/projects/${projectId}/cards`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (e) {
+    return {
+      error: "Error",
+    };
+  }
+};
+
+const addCard = async (
+  token: string,
+  projectId: number,
+  title: string,
+  description: string,
+  statusId: number | undefined
+) => {
+  try {
+    const newCard = {
+      title: title,
+      description: description,
+      ...(statusId && { statusId: statusId }),
+    };
+    const response = await API.post<Card>(
+      `/projects/${projectId}/cards`,
+      newCard,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  } catch (e) {
+    return {
+      error: "Error",
+    };
+  }
+};
+
+const deleteCard = async (token: string, projectId: number, cardId: number) => {
+  try {
+    const response = await API.delete(`/projects/${projectId}/cards`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { cardId: cardId },
+    });
+    return response.data;
+  } catch (e) {
+    return {
+      error: "Error",
+    };
+  }
+};
+
+const editCard = async (
+  token: string,
+  projectId: number,
+  cardId: number,
+  title: string,
+  description: string,
+  statusId?: number
+) => {
+  try {
+    const newCard = {
+      title: title,
+      description: description,
+      cardId: cardId,
+      ...(statusId ? { statusId: statusId } : { statusId: null }),
+    };
+
+    const response = await API.patch<Card>(
+      `/projects/${projectId}/cards`,
+      newCard,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return response.data;
+  } catch (e) {
+    return {
+      error: "Error",
+    };
+  }
+};
+
+export {
+  login,
+  signUp,
+  getProjects,
+  addProject,
+  getAllStatuses,
+  addStatus,
+  getCards,
+  addCard,
+  deleteCard,
+  editCard,
+};
+
+export type { Project, Card, Status };

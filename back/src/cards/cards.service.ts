@@ -115,9 +115,11 @@ export class CardsService {
     if (!card) {
       throw new NotFoundException();
     }
-    const status = await this.statusRepository.findOne({
-      where: { id: statusId },
-    });
+    const status = statusId
+      ? await this.statusRepository.findOne({
+          where: { id: statusId },
+        })
+      : null;
 
     await this.cardRepository
       .createQueryBuilder()
@@ -125,7 +127,7 @@ export class CardsService {
       .set({
         ...(title && { title: title }),
         ...(description && { description: description }),
-        ...(status && { status: status }),
+        ...{ status: status },
       })
       .where('Card.id = :id', { id: cardId })
       .execute();
@@ -139,9 +141,30 @@ export class CardsService {
         'Status.id',
         'Status.name',
       ])
-      .innerJoin('Card.status', 'Status')
+      .leftJoin('Card.status', 'Status')
       .where('Card.id = :id', { id: cardId });
 
     return await query2.getOne();
+  }
+
+  async removeCard(projectId: number, cardId: number, email: string) {
+    const query = this.cardRepository
+      .createQueryBuilder('Card')
+      .select()
+      .innerJoin('Card.project', 'Project')
+      .innerJoin('Project.user', 'User')
+      .where('Card.id = :id', { id: cardId })
+      .andWhere('User.email = :email', { email: email })
+      .andWhere('Project.id = :id', { id: projectId });
+
+    const card = await query.execute();
+    if (!card) {
+      throw new NotFoundException();
+    }
+    await this.cardRepository
+      .createQueryBuilder('Card')
+      .delete()
+      .where('Card.id = :id', { id: cardId })
+      .execute();
   }
 }

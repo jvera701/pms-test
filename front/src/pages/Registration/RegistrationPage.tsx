@@ -21,6 +21,7 @@ const RegistrationPage: React.FC = () => {
       } else {
         setAtom({
           token: result.access_token,
+          project: undefined,
         });
         navigate("/projects");
       }

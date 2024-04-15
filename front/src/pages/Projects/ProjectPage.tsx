@@ -15,28 +15,38 @@ import {
 import { useState, useEffect } from "react";
 import { UserAtom } from "../../store/userAtom";
 import { getProjects, addProject } from "../../api/api";
+import type { Project } from "../../api/api";
 import { useAtom } from "jotai";
 import { useNavigate } from "react-router-dom";
-
-type Project = {
-  id: number;
-  name: string;
-};
 
 function ProjectPage() {
   const [listProjects, setListProjects] = useState<Project[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useAtom(UserAtom);
+  const [showError, setShowError] = useState(false);
   const navigate = useNavigate();
+
+  const navigateToBoard = (project: Project) => {
+    setUser({
+      ...user,
+      project: project,
+    });
+    navigate("/board");
+  };
 
   const getAllProjects = async () => {
     const newProjects = await getProjects(user.token);
+    if ("error" in newProjects) {
+      setShowError(true);
+      return;
+    }
     setListProjects(newProjects);
   };
 
   const logout = () => {
     setUser({
       token: "",
+      project: undefined,
     });
     navigate("/");
   };
@@ -62,6 +72,10 @@ function ProjectPage() {
             const formJson = Object.fromEntries((formData as any).entries());
             const project = formJson.project;
             const addProjects = await addProject(user.token, project);
+            if ("error" in addProjects) {
+              setShowError(true);
+              return;
+            }
             setListProjects((prevList) => [...prevList, addProjects]);
             setIsOpen(false);
           },
@@ -92,7 +106,7 @@ function ProjectPage() {
         {listProjects.map((project) => (
           <Grid item xs={4} key={project.id}>
             <Card variant="outlined">
-              <CardActionArea>
+              <CardActionArea onClick={() => navigateToBoard(project)}>
                 <CardContent>{project.name}</CardContent>
               </CardActionArea>
             </Card>

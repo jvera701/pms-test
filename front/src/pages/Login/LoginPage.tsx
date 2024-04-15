@@ -23,6 +23,7 @@ function LoginPage() {
       } else {
         setAtom({
           token: result.access_token,
+          project: undefined,
         });
         navigate("/projects");
       }

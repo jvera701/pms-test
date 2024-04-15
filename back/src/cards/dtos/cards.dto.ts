@@ -30,3 +30,8 @@ export class CardUpdateDto {
   @IsOptional()
   description: string;
 }
+
+export class CardDeleteDto {
+  @IsInt()
+  cardId: number;
+}

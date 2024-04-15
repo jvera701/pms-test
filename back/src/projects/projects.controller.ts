@@ -1,9 +1,22 @@
-import { Controller, Get, Post, Body, Req, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Req,
+  Param,
+  Patch,
+  Delete,
+} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { ProjectDto } from './dtos/projects.dto';
 import { StatusDto } from 'src/status/dtos/status.dto';
 import { CardsService } from 'src/cards/cards.service';
-import { CardDto, CardUpdateDto } from 'src/cards/dtos/cards.dto';
+import {
+  CardDto,
+  CardUpdateDto,
+  CardDeleteDto,
+} from 'src/cards/dtos/cards.dto';
 
 @Controller('projects')
 export class ProjectsController {
@@ -52,6 +65,15 @@ export class ProjectsController {
       updateCard.description,
       request.email,
     );
+  }
+
+  @Delete('/:id/cards')
+  deleteCards(
+    @Req() request,
+    @Param('id') id: number,
+    @Body() deleteCard: CardDeleteDto,
+  ) {
+    this.cardService.removeCard(id, deleteCard.cardId, request.email);
   }
 
   @Get('/:id/status')
